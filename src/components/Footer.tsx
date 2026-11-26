@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Mail, Phone, MapPin, Globe } from 'lucide-react';
+import { Leaf, Mail, Phone, MapPin, Globe, Lock } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -51,7 +51,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Contact & Admin */}
           <div className="space-y-3">
             <h4 className="text-white font-bold text-sm uppercase tracking-wider">Contact Desk</h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
@@ -67,9 +67,14 @@ export default function Footer() {
                 <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Agri-Export Zone, Hub Terminal</span>
               </li>
-              <li className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Shipping Worldwide</span>
+              <li className="pt-2">
+                <a
+                  href="/admin/login"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-emerald-950 text-slate-400 hover:text-emerald-400 border border-slate-800 transition-colors"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Admin Portal</span>
+                </a>
               </li>
             </ul>
           </div>
@@ -81,7 +86,7 @@ export default function Footer() {
           <div className="flex gap-6">
             <a href="#" className="hover:text-slate-400">Privacy Policy</a>
             <a href="#" className="hover:text-slate-400">Terms of Supply</a>
-            <a href="#" className="hover:text-slate-400">Certificates</a>
+            <a href="/admin/login" className="hover:text-emerald-400 text-slate-400">Admin Login</a>
           </div>
         </div>
       </div>

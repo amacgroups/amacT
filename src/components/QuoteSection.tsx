@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Send, CheckCircle2, Phone, Mail, MapPin, Building, Globe } from 'lucide-react';
+import { Send, CheckCircle2, Phone, Mail, Building, Globe, AlertCircle, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/data/products';
 
 export default function QuoteSection() {
@@ -16,14 +16,35 @@ export default function QuoteSection() {
     message: '',
   });
 
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [refNumber, setRefNumber] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const fakeRef = 'AMAC-' + Math.floor(100000 + Math.random() * 900000);
-    setRefNumber(fakeRef);
-    setSubmitted(true);
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const res = await fetch('/api/inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to submit inquiry');
+      }
+
+      setRefNumber(data.reference || 'AMAC-' + Math.floor(100000 + Math.random() * 900000));
+      setSubmitted(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,7 +118,7 @@ export default function QuoteSection() {
                   </div>
                   <h3 className="text-2xl font-black text-slate-900">Quotation Request Received!</h3>
                   <p className="text-slate-600 text-sm max-w-md mx-auto">
-                    Thank you for contacting AMAC Group. Your inquiry reference is <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">{refNumber}</span>. Our export trading manager will reply within 24 business hours with current FOB/CIF rates.
+                    Thank you for contacting AMAC Group. Your inquiry reference is <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">{refNumber}</span>. Our export trading manager has received your submission and will reply within 24 business hours with current FOB/CIF rates.
                   </p>
                   <button
                     onClick={() => {
@@ -120,6 +141,13 @@ export default function QuoteSection() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {errorMessage && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
@@ -178,7 +206,7 @@ export default function QuoteSection() {
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-sm"
                       >
                         {PRODUCTS.map((p) => (
-                          <option key={p.id} value={p.id}>
+                          <option key={p.id} value={p.name}>
                             {p.name} ({p.category.toUpperCase()})
                           </option>
                         ))}
@@ -224,10 +252,20 @@ export default function QuoteSection() {
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    disabled={loading}
+                    className="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 disabled:opacity-60"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>Send Commercial Inquiry</span>
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Sending Request to Export Desk...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Send Commercial Inquiry</span>
+                      </>
+                    )}
                   </button>
                 </form>
               )}

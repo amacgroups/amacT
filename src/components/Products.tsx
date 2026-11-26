@@ -1,16 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
-import { PRODUCTS, Product } from '@/data/products';
-import { Apple, Carrot, Check, Calendar, Package, ArrowUpRight, Sparkles, X, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { PRODUCTS as FALLBACK_PRODUCTS, Product } from '@/data/products';
+import { Apple, Carrot, Calendar, Package, ArrowUpRight, X, ShieldCheck, RefreshCw } from 'lucide-react';
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [activeTab, setActiveTab] = useState<'all' | 'fruits' | 'vegetables'>('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  useEffect(() => {
+    // Dynamically fetch latest products from the backend store
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        }
+      })
+      .catch((err) => {
+        console.warn('Using initial produce list fallback', err);
+      });
+  }, []);
+
   const filteredProducts = activeTab === 'all'
-    ? PRODUCTS
-    : PRODUCTS.filter((item) => item.category === activeTab);
+    ? products
+    : products.filter((item) => item.category === activeTab);
 
   return (
     <section id="products" className="py-20 bg-slate-50 border-t border-slate-200/60">
@@ -39,7 +54,7 @@ export default function Products() {
                   : 'text-slate-600 hover:text-emerald-600'
               }`}
             >
-              All Harvests
+              All Harvests ({products.length})
             </button>
             <button
               onClick={() => setActiveTab('fruits')}
@@ -159,22 +174,24 @@ export default function Products() {
                 </div>
                 <div className="p-3.5 bg-slate-50 rounded-xl">
                   <span className="text-xs font-semibold text-slate-500 block">Recommended Temp</span>
-                  <span className="font-bold text-slate-800">{selectedProduct.specs.temperature}</span>
+                  <span className="font-bold text-slate-800">{selectedProduct.specs?.temperature}</span>
                 </div>
                 <div className="p-3.5 bg-slate-50 rounded-xl">
                   <span className="text-xs font-semibold text-slate-500 block">Shelf Life</span>
-                  <span className="font-bold text-slate-800">{selectedProduct.specs.shelfLife}</span>
+                  <span className="font-bold text-slate-800">{selectedProduct.specs?.shelfLife}</span>
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {selectedProduct.specs.certifications.map((cert) => (
-                  <span key={cert} className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    {cert}
-                  </span>
-                ))}
-              </div>
+              {selectedProduct.specs?.certifications && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {selectedProduct.specs.certifications.map((cert) => (
+                    <span key={cert} className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      {cert}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div className="mt-6 pt-4 flex gap-3">
                 <a
